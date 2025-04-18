@@ -5,8 +5,7 @@ import pandas as pd
 import calendar
 from datetime import datetime, timedelta
 from gcal_sync import sync_reviews_to_calendar
-from login import run_login
-from user_data import load_user_subjects, save_user_subjects
+
 from firebase_db import load_user_subjects, save_user_subjects, add_user_xp
 
 
