@@ -8,12 +8,13 @@ from gcal_sync import sync_reviews_to_calendar
 from firebase_db import load_user_subjects
 
 # ✅ Check login session
-if "user" not in st.session_state:
+if "username" not in st.session_state:
     st.error("❌ Please log in first.")
     st.stop()
 
 # ✅ Get logged-in user
-user = st.session_state["user"]
+user = st.session_state["username"]
+
 
 # ✅ Safe call to load data
 try:

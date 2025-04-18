@@ -3,14 +3,11 @@ st.set_page_config(page_title="Spaced Recall App", layout="centered")
 
 from login import run_login
 
-if "user" not in st.session_state:
+if "username" not in st.session_state:
     user = run_login()
-    if user:  # double check it's not None
-        st.session_state["user"] = user
-    else:
-        st.stop()
+    st.session_state["username"] = user
 else:
-    user = st.session_state["user"]
+    user = st.session_state["username"]
 
 # ✅ Debug
 st.sidebar.write("🔐 Logged in as:", user)
