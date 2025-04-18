@@ -1,4 +1,6 @@
 import streamlit as st
+from firebase_db import load_user_subjects, save_user_subjects, add_user_xp
+
 
 st.set_page_config(page_title="Spaced Recall App", layout="centered")
 
