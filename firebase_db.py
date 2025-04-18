@@ -5,7 +5,7 @@ from firebase_admin import credentials, firestore
 
 # === Initialize Firebase only once
 if not firebase_admin._apps:
-    cred = credentials.Certificate(json.loads(st.secrets["firebase"].to_json()))
+    cred = credentials.Certificate(dict(st.secrets["firebase"]))
     firebase_admin.initialize_app(cred)
 
 # === Connect to Firestore
