@@ -18,8 +18,8 @@ if "username" in st.session_state:
         st.experimental_rerun()
 
 # === GUEST VIEW ===
-else:
-    # 👋 Welcome Greeting for New Visitors
+# === GUEST VIEW ===
+if "username" not in st.session_state:
     st.title("📚 Welcome to the Spaced Recall App")
     st.markdown("""
     👋 **Welcome, future master of memory!**
@@ -29,33 +29,28 @@ else:
     - 📈 Track progress by topic, section, and subject
     - 🏆 Level up with XP, confidence, and AI feedback
     - 🎮 Customize your learning journey with anime-style power levels
-
-    ---  
     """)
-    
-    # === LOGIN SECTION ===
-    user = run_login()
-    if user:
-        st.session_state["username"] = user
-        st.experimental_rerun()
 
-    # === REGISTRATION TOGGLE ===
-    if "show_register" not in st.session_state:
-        st.session_state["show_register"] = False
+    col1, col2 = st.columns(2)
 
-    if st.button("🆕 Register New Account"):
-        st.session_state["show_register"] = not st.session_state["show_register"]
+    # === LOGIN FORM ===
+    with col1:
+        st.subheader("🔐 Log In")
+        user = run_login()
+        if user:
+            st.session_state["username"] = user
+            st.success("✅ Login successful.")
+            st.stop()
 
     # === REGISTER FORM ===
-    if st.session_state["show_register"]:
-        st.subheader("Create a New Account")
-
+    with col2:
+        st.subheader("🆕 Register")
         with st.form("register_form", clear_on_submit=True):
             name = st.text_input("Full Name")
             email = st.text_input("Email")
             username = st.text_input("Username (unique)")
             password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Register")
+            submit = st.form_submit_button("Create Account")
 
             if submit:
                 users_ref = db.collection("users_metadata")
@@ -71,5 +66,5 @@ else:
                         "password": hashed_pw,
                         "roles": ["user"]
                     })
-                    st.success("✅ Account created! You can now log in above.")
-                    st.session_state["show_register"] = False
+                    st.success("✅ Account created! Please log in on the left.")
+
