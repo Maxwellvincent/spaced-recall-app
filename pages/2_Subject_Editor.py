@@ -23,7 +23,6 @@ except Exception as e:
     st.error(f"⚠️ Failed to load data for `{user}`. Error: {e}")
     st.stop()
 
-st.set_page_config(page_title="Subject Editor", layout="centered")
 st.title("🛠️ Subject Editor")
 
 if not subjects:
