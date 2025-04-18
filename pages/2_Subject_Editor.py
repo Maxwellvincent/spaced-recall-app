@@ -1,13 +1,26 @@
 import streamlit as st
-from firebase_db import load_user_subjects, save_user_subjects, add_user_xp
-from datetime import datetime
+st.set_page_config(page_title="Dashboard", layout="centered")  # MUST be first!
 
+import pandas as pd
+import calendar
+from datetime import datetime, timedelta
+from gcal_sync import sync_reviews_to_calendar
+from firebase_db import load_user_subjects
+
+# ✅ Check login session
 if "user" not in st.session_state:
     st.error("❌ Please log in first.")
     st.stop()
 
+# ✅ Get logged-in user
 user = st.session_state["user"]
-subjects = load_user_subjects(user)
+
+# ✅ Safe call to load data
+try:
+    subjects = load_user_subjects(user)
+except Exception as e:
+    st.error(f"⚠️ Failed to load data for `{user}`. Error: {e}")
+    st.stop()
 
 st.set_page_config(page_title="Subject Editor", layout="centered")
 st.title("🛠️ Subject Editor")
