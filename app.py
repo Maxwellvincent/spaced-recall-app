@@ -1,7 +1,9 @@
 import streamlit as st
+st.set_page_config(page_title="Spaced Recall App", layout="centered")
+
 from login import run_login
 
-st.set_page_config(page_title="Spaced Recall App", layout="centered")
+
 
 # 🔐 Ensure user login only once
 if "user" not in st.session_state:
