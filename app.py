@@ -3,13 +3,14 @@ from login import run_login
 
 st.set_page_config(page_title="Spaced Recall App", layout="centered")
 
-# 🔐 Handle login once
-user = run_login()
+# ✅ Login ONCE and store user in session
+if "user" not in st.session_state:
+    user = run_login()
+    st.session_state["user"] = user
+else:
+    user = st.session_state["user"]
 
-# ✅ Store user globally so all pages can access
-st.session_state["user"] = user
-
-# 🎉 Landing Page
+# ✅ Show home content after login
 st.title("📚 Welcome to the Spaced Recall App")
 st.markdown(f"👋 Hello, `{user}`!")
 

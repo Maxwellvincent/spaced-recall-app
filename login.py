@@ -1,16 +1,13 @@
 import streamlit as st
 import streamlit_authenticator as stauth
 
-# === Define users (name, username, email)
 names = ["Louis Maxwel", "Admin User"]
 usernames = ["louis", "admin"]
 emails = ["louis@example.com", "admin@example.com"]
-passwords = ["test123", "admin123"]  # Plaintext temporarily
+passwords = ["test123", "admin123"]
 
-# === Hash passwords
 hashed_passwords = [stauth.Hasher().hash(pw) for pw in passwords]
 
-# === Build credentials config
 credentials = {
     "usernames": {
         usernames[i]: {
@@ -21,37 +18,30 @@ credentials = {
     }
 }
 
-# === Create authenticator instance
 authenticator = stauth.Authenticate(
     credentials,
     cookie_name="spaced_recall_login",
-    key="random_signature_key_12345",
+    key="random_signature_key_123",
     cookie_expiry_days=30
 )
 
-# === Handle login
 def run_login():
     if "logout" not in st.session_state:
         st.session_state["logout"] = False
 
     result = authenticator.login("main", "Login")
-
-    # If login returns None (which it does on first load), prevent unpacking
     if result is None:
-        st.warning("⚠️ Please enter your login credentials.")
         st.stop()
 
     name, auth_status, username = result
 
     if auth_status is False:
         st.error("❌ Incorrect username or password.")
+        st.stop()
     elif auth_status is None:
         st.warning("⚠️ Please enter your credentials.")
-
-    if auth_status:
-        authenticator.logout("Logout", "sidebar")
-        st.sidebar.success(f"✅ Logged in as: {name}")
-        return username
-    else:
         st.stop()
 
+    authenticator.logout("Logout", "sidebar")
+    st.sidebar.success(f"✅ Logged in as {name}")
+    return username

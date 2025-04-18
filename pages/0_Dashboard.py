@@ -11,10 +11,16 @@ from firebase_db import load_user_subjects, save_user_subjects, add_user_xp
 
 
 if "user" not in st.session_state:
-    st.warning("⚠️ Please log in first.")
+    st.error("❌ Please log in first.")
     st.stop()
 
 user = st.session_state["user"]
+
+st.title("📊 Dashboard")
+st.markdown(f"Welcome back, **{user}**!")
+
+st.markdown("Here’s where you’ll see your XP progress, reviews due, and study activity.")
+
 
 subjects = load_user_subjects(user)
 
