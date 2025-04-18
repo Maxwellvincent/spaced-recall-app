@@ -1,54 +1,44 @@
 import streamlit as st
-from firebase_db import db
-import streamlit_authenticator as stauth
 from login import run_login
 
 st.set_page_config(page_title="Spaced Recall App", layout="centered")
 
 st.title("📚 Welcome to the Spaced Recall App")
 
-# === Logged-in View ===
+st.markdown("""
+👋 **Welcome, future master of memory!**
+
+Spaced Recall is your personal learning command center. Here's what it helps you do:
+
+- 🧠 Learn deeply using intelligent spaced repetition
+- ✍️ Organize your studies across subjects and topics
+- 📆 Track your review schedule and never forget a concept
+- ⚡ Customize your learning style: exam prep, mind maps, reading logs, and more
+- 🎮 Gain XP and level up with power meters based on your progress
+- 🧙 Personalize with themes like Naruto chakra mode, DBZ power levels, or minimalist stats
+
+Use the sidebar to begin:
+- 🔐 Log in if you're already a user
+- 🆕 Go to the Register page to create your account
+- 🧭 Explore your dashboard, subjects, and study logs once logged in
+""")
+
+# === LOGGED IN VIEW ===
 if "username" in st.session_state:
     user = st.session_state["username"]
     st.success(f"👋 Welcome back, **{user}**!")
 
-    st.markdown("Use the sidebar to start studying, editing subjects, or reviewing.")
+    st.markdown("Use the sidebar to explore your dashboard, edit subjects, or begin reviewing.")
 
     if st.button("🔓 Log out"):
         st.session_state.clear()
         st.rerun()
 
-# === Not Logged-in View ===
+# === NOT LOGGED IN ===
 else:
-    # === Login Section ===
     st.subheader("🔐 Log In")
     user = run_login()
     if user:
         st.session_state["username"] = user
         st.success("✅ Login successful!")
         st.rerun()
-
-    # === Always Show Register Form ===
-    st.markdown("---")
-    st.subheader("🆕 Register a New Account")
-
-    name = st.text_input("Full Name")
-    email = st.text_input("Email")
-    new_username = st.text_input("Username (unique)")
-    new_password = st.text_input("Password", type="password")
-
-    if st.button("Create Account"):
-        users_ref = db.collection("users_metadata")
-        user_doc = users_ref.document(new_username).get()
-
-        if user_doc.exists:
-            st.warning("🚫 Username already exists.")
-        else:
-            hashed_pw = stauth.Hasher().hash([new_password])[0]
-            users_ref.document(new_username).set({
-                "name": name,
-                "email": email,
-                "password": hashed_pw,
-                "roles": ["user"]
-            })
-            st.success("✅ Account created! You can now log in above.")
