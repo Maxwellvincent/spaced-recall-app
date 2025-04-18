@@ -1,5 +1,12 @@
-venv/
+# Python + Streamlit
 __pycache__/
 *.pyc
+venv/
+token.json
+firebase_key.json
+credentials.json
+subjects.json
 review_log.json
-*.log
+test_subjects.py
+user_data/
+
