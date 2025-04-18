@@ -31,7 +31,7 @@ authenticator = stauth.Authenticate(
 
 # === Run login process
 def run_login():
-    name, auth_status, username = authenticator.login("Login", "main")
+    name, auth_status, username = authenticator.login("main", "Login")
 
     if auth_status is False:
         st.error("❌ Incorrect username or password.")
