@@ -1,5 +1,6 @@
-st.set_page_config(page_title="Dashboard", layout="centered")  # MUST be first!
 import streamlit as st
+st.set_page_config(page_title="Dashboard", layout="centered")  # MUST be first!
+
 import pandas as pd
 import calendar
 from datetime import datetime, timedelta
