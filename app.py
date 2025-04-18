@@ -15,7 +15,7 @@ if "username" in st.session_state:
 
     if st.button("🔓 Log out"):
         st.session_state.clear()
-        st.experimental_rerun()
+        st.stop()
 
 # === GUEST VIEW ===
 # === GUEST VIEW ===
