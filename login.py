@@ -1,17 +1,16 @@
 import streamlit as st
 import streamlit_authenticator as stauth
 
-# === Define users
+# === Define users (name, username, email)
 names = ["Louis Maxwel", "Admin User"]
 usernames = ["louis", "admin"]
 emails = ["louis@example.com", "admin@example.com"]
+passwords = ["test123", "admin123"]  # Plaintext temporarily
 
-# Hashed passwords: use plain text first, then hash and replace (see note below)
-passwords = ["test123", "admin123"]
+# === Hash passwords
 hashed_passwords = [stauth.Hasher().hash(pw) for pw in passwords]
 
-
-# === Authentication configuration
+# === Build credentials config
 credentials = {
     "usernames": {
         usernames[i]: {
@@ -22,6 +21,7 @@ credentials = {
     }
 }
 
+# === Create authenticator instance
 authenticator = stauth.Authenticate(
     credentials,
     cookie_name="spaced_recall_login",
@@ -29,9 +29,9 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=30
 )
 
-# === Run login process
+# === Handle login
 def run_login():
-    name, auth_status, username = authenticator.login("main", "Login")
+    name, auth_status, username = authenticator.login(location="main")
 
     if auth_status is False:
         st.error("❌ Incorrect username or password.")
