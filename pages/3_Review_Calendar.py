@@ -1,30 +1,20 @@
 import streamlit as st
 import pandas as pd
 import calendar
-import json
-import os
 from datetime import datetime
-from login import run_login
-from user_data import load_user_subjects, save_user_subjects
+from firebase_db import load_user_subjects
 
 if "user" not in st.session_state:
-    st.warning("⚠️ Please log in first.")
+    st.error("❌ Please log in first.")
     st.stop()
 
 user = st.session_state["user"]
 subjects = load_user_subjects(user)
+today = datetime.today().date()
 
+st.title("📅 Review Calendar")
 
-
-SUBJECTS_FILE = "subjects.json"
-
-def load_subjects():
-    if os.path.exists(SUBJECTS_FILE):
-        with open(SUBJECTS_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-def collect_due_dates(subjects):
+def collect_review_dates(subjects):
     review_dates = {}
     def add(date_str, label):
         if date_str:
@@ -32,42 +22,35 @@ def collect_due_dates(subjects):
 
     for subj_name, subj in subjects.items():
         if subj.get("study_style") == "concept_mastery":
-            for topic_name, topic in subj.get("topics", {}).items():
-                add(topic.get("next_review"), f"{subj_name}: {topic_name}")
+            for topic, data in subj.get("topics", {}).items():
+                add(data.get("next_review"), f"{subj_name}: {topic}")
         elif subj.get("study_style") == "exam_mode":
-            for section, sec_data in subj.get("sections", {}).items():
-                if sec_data.get("study_style") == "concept_mastery":
-                    for topic_name, topic in sec_data.get("topics", {}).items():
-                        full = f"{subj_name} > {section}: {topic_name}"
-                        add(topic.get("next_review"), full)
+            for sec_name, sec in subj.get("sections", {}).items():
+                if sec.get("study_style") == "concept_mastery":
+                    for topic, data in sec.get("topics", {}).items():
+                        full = f"{subj_name} > {sec_name}: {topic}"
+                        add(data.get("next_review"), full)
     return review_dates
 
-def build_calendar_matrix(dates_dict):
-    today = datetime.today()
+def build_calendar(review_dict):
     year, month = today.year, today.month
     cal = calendar.Calendar(firstweekday=6)
-    month_days = cal.itermonthdays(year, month)
+    days = cal.itermonthdays(year, month)
+    matrix, week = [], []
 
-    data = []
-    week = []
-    for day in month_days:
+    for day in days:
         if day == 0:
-            week.append("")  # padding
+            week.append("")
         else:
             date_str = datetime(year, month, day).date().isoformat()
-            items = "\n".join(dates_dict.get(date_str, []))
-            week.append(f"{day}\n{items}" if items else str(day))
+            entries = "\n".join(review_dict.get(date_str, []))
+            week.append(f"{day}\n{entries}" if entries else str(day))
         if len(week) == 7:
-            data.append(week)
+            matrix.append(week)
             week = []
-    return pd.DataFrame(data, columns=["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])
 
-# Main app
-st.set_page_config(page_title="Review Calendar")
-st.title("📆 Review Calendar")
+    return pd.DataFrame(matrix, columns=["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"])
 
-subjects = load_subjects()
-due_dates = collect_due_dates(subjects)
-calendar_df = build_calendar_matrix(due_dates)
-
+review_dict = collect_review_dates(subjects)
+calendar_df = build_calendar(review_dict)
 st.dataframe(calendar_df, use_container_width=True)
