@@ -8,7 +8,8 @@ emails = ["louis@example.com", "admin@example.com"]
 
 # Hashed passwords: use plain text first, then hash and replace (see note below)
 passwords = ["test123", "admin123"]
-hashed_passwords = stauth.Hasher().hash(passwords)
+hashed_passwords = [stauth.Hasher().hash(pw) for pw in passwords]
+
 
 # === Authentication configuration
 credentials = {
