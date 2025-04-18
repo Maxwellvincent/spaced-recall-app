@@ -31,6 +31,7 @@ def run_login():
 
     result = authenticator.login("main", "Login")
     if result is None:
+        st.warning("⚠️ Please enter your credentials.")
         st.stop()
 
     name, auth_status, username = result
@@ -43,5 +44,6 @@ def run_login():
         st.stop()
 
     authenticator.logout("Logout", "sidebar")
-    st.sidebar.success(f"✅ Logged in as {name}")
-    return username
+    st.sidebar.success(f"✅ Logged in as: {name}")
+    return username  # <== this must return a string like "louis"
+
