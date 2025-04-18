@@ -34,7 +34,14 @@ def run_login():
     if "logout" not in st.session_state:
         st.session_state["logout"] = False
 
-    name, auth_status, username = authenticator.login("main", "Login")
+    result = authenticator.login("main", "Login")
+
+    # If login returns None (which it does on first load), prevent unpacking
+    if result is None:
+        st.warning("⚠️ Please enter your login credentials.")
+        st.stop()
+
+    name, auth_status, username = result
 
     if auth_status is False:
         st.error("❌ Incorrect username or password.")
