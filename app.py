@@ -1,16 +1,16 @@
 import streamlit as st
-st.set_page_config(page_title="Spaced Recall App", layout="centered")  # MUST be first
-
 from login import run_login
 
-# ✅ Login once
+st.set_page_config(page_title="Spaced Recall App", layout="centered")
+
+# 🔐 Ensure user login only once
 if "user" not in st.session_state:
     user = run_login()
     st.session_state["user"] = user
 else:
     user = st.session_state["user"]
 
-# 🎉 Home content
+# ✅ Home screen after login
 st.title("📚 Welcome to the Spaced Recall App")
 st.markdown(f"👋 Hello, `{user}`!")
 
