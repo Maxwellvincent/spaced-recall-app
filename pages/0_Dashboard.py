@@ -10,7 +10,12 @@ from user_data import load_user_subjects, save_user_subjects
 from firebase_db import load_user_subjects, save_user_subjects, add_user_xp
 
 
-user = run_login()
+if "user" not in st.session_state:
+    st.warning("⚠️ Please log in first.")
+    st.stop()
+
+user = st.session_state["user"]
+
 subjects = load_user_subjects(user)
 
 
