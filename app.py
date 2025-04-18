@@ -1,9 +1,11 @@
 import streamlit as st
+st.set_page_config(page_title="Spaced Recall App", layout="centered")
+
 from login import run_login
 from firebase_db import db
 import streamlit_authenticator as stauth
 
-st.set_page_config(page_title="Spaced Recall App", layout="centered")
+
 
 # === LOGGED IN VIEW ===
 if "username" in st.session_state:
@@ -17,9 +19,9 @@ if "username" in st.session_state:
         st.session_state.clear()
         st.rerun()
 
+
 # === GUEST VIEW ===
-# === GUEST VIEW ===
-if "username" not in st.session_state:
+else:
     st.title("📚 Welcome to the Spaced Recall App")
     st.markdown("""
     👋 **Welcome, future master of memory!**
@@ -31,38 +33,36 @@ if "username" not in st.session_state:
     - 🎮 Customize your learning journey with anime-style power levels
     """)
 
-    # === Side-by-side Login / Register
-    col1, col2 = st.columns(2)
+    # === LOGIN ===
+    st.subheader("🔐 Log In")
+    user = run_login()
+    if user:
+        st.session_state["username"] = user
+        st.success("✅ Login successful.")
+        st.stop()
 
-    with col1:
-        st.subheader("🔐 Log In")
-        user = run_login()
-        if user:
-            st.session_state["username"] = user
-            st.success("✅ Login successful. Reloading...")
-            st.stop()
+    # === REGISTER ===
+    st.markdown("---")
+    st.subheader("🆕 Register a New Account")
 
-    with col2:
-        st.subheader("🆕 Register")
+    name = st.text_input("Full Name")
+    email = st.text_input("Email")
+    username = st.text_input("Username (unique)")
+    password = st.text_input("Password", type="password")
 
-        name = st.text_input("Full Name")
-        email = st.text_input("Email")
-        username = st.text_input("Username (unique)")
-        password = st.text_input("Password", type="password")
+    if st.button("Create Account"):
+        users_ref = db.collection("users_metadata")
+        user_doc = users_ref.document(username).get()
 
-        if st.button("Create Account"):
-            users_ref = db.collection("users_metadata")
-            user_doc = users_ref.document(username).get()
-
-            if user_doc.exists:
-                st.warning("🚫 Username already exists.")
-            else:
-                hashed_pw = stauth.Hasher().hash([password])[0]
-                users_ref.document(username).set({
-                    "name": name,
-                    "email": email,
-                    "password": hashed_pw,
-                    "roles": ["user"]
-                })
-                st.success("✅ Account created! You can now log in on the left.")
+        if user_doc.exists:
+            st.warning("🚫 Username already exists.")
+        else:
+            hashed_pw = stauth.Hasher().hash([password])[0]
+            users_ref.document(username).set({
+                "name": name,
+                "email": email,
+                "password": hashed_pw,
+                "roles": ["user"]
+            })
+            st.success("✅ Account created! You can now log in above.")
 
