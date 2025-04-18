@@ -18,7 +18,8 @@ if "username" in st.session_state:
         st.rerun()
 
 # === GUEST VIEW ===
-else:
+# === GUEST VIEW ===
+if "username" not in st.session_state:
     st.title("📚 Welcome to the Spaced Recall App")
     st.markdown("""
     👋 **Welcome, future master of memory!**
@@ -30,9 +31,9 @@ else:
     - 🎮 Customize your learning journey with anime-style power levels
     """)
 
+    # === Side-by-side Login / Register
     col1, col2 = st.columns(2)
 
-    # === LOGIN FORM ===
     with col1:
         st.subheader("🔐 Log In")
         user = run_login()
@@ -41,7 +42,6 @@ else:
             st.success("✅ Login successful. Reloading...")
             st.stop()
 
-    # === REGISTER FORM ===
     with col2:
         st.subheader("🆕 Register")
 
@@ -64,4 +64,5 @@ else:
                     "password": hashed_pw,
                     "roles": ["user"]
                 })
-                st.success("✅ Account created! Please log in on the left.")
+                st.success("✅ Account created! You can now log in on the left.")
+
