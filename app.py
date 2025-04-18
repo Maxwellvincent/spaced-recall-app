@@ -17,7 +17,7 @@ if "username" in st.session_state:
         st.session_state.clear()
         st.stop()
 
-# === GUEST VIEW ===
+
 # === GUEST VIEW ===
 if "username" not in st.session_state:
     st.title("📚 Welcome to the Spaced Recall App")
@@ -33,19 +33,20 @@ if "username" not in st.session_state:
 
     col1, col2 = st.columns(2)
 
-    # === LOGIN FORM ===
+    # === LOGIN ===
     with col1:
         st.subheader("🔐 Log In")
         user = run_login()
         if user:
             st.session_state["username"] = user
-            st.success("✅ Login successful.")
+            st.success("✅ Login successful. Loading your dashboard...")
             st.stop()
 
     # === REGISTER FORM ===
     with col2:
         st.subheader("🆕 Register")
-        with st.form("register_form", clear_on_submit=True):
+
+        with st.form("register_form"):
             name = st.text_input("Full Name")
             email = st.text_input("Email")
             username = st.text_input("Username (unique)")
@@ -67,4 +68,3 @@ if "username" not in st.session_state:
                         "roles": ["user"]
                     })
                     st.success("✅ Account created! Please log in on the left.")
-
