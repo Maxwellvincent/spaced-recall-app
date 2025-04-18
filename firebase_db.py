@@ -1,10 +1,11 @@
 import firebase_admin
+import json
 import streamlit as st
 from firebase_admin import credentials, firestore
 
 # === Initialize Firebase only once
 if not firebase_admin._apps:
-    cred = credentials.Certificate(st.secrets["firebase"])
+    cred = credentials.Certificate(json.loads(st.secrets["firebase"].to_json()))
     firebase_admin.initialize_app(cred)
 
 # === Connect to Firestore
