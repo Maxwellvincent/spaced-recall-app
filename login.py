@@ -31,6 +31,10 @@ authenticator = stauth.Authenticate(
 
 # === Handle login
 def run_login():
+    # Ensure 'logout' key is initialized
+    if 'logout' not in st.session_state:
+        st.session_state['logout'] = False
+        
     name, auth_status, username = authenticator.login(location="main")
 
     if auth_status is False:
