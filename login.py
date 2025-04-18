@@ -31,19 +31,20 @@ authenticator = stauth.Authenticate(
 
 # === Handle login
 def run_login():
-    if 'logout' not in st.session_state:
-        st.session_state['logout'] = False
+    if "logout" not in st.session_state:
+        st.session_state["logout"] = False
 
-    authenticator.login()
+    name, auth_status, username = authenticator.login("main", "Login")
 
-    if authenticator.authentication_status is False:
+    if auth_status is False:
         st.error("❌ Incorrect username or password.")
-    elif authenticator.authentication_status is None:
+    elif auth_status is None:
         st.warning("⚠️ Please enter your credentials.")
 
-    if authenticator.authentication_status:
+    if auth_status:
         authenticator.logout("Logout", "sidebar")
-        st.sidebar.success(f"✅ Logged in as: {authenticator.name}")
-        return authenticator.username
+        st.sidebar.success(f"✅ Logged in as: {name}")
+        return username
     else:
         st.stop()
+
