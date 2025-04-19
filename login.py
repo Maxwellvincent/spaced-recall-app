@@ -37,9 +37,9 @@ def run_login():
                 st.session_state["username"] = login_id
                 st.session_state["name"] = data.get("name", login_id)
                 st.session_state["roles"] = data.get("roles", ["user"])
-                
-                switch_page("Dashboard")  # 👈 Jump to Dashboard
-                return login_id
+
+                st.success("✅ Login successful! Please use the sidebar to open your Dashboard.")
+                st.stop()
             else:
                 st.error("❌ Incorrect password.")
                 return None
