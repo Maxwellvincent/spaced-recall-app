@@ -3,7 +3,7 @@ from login import run_login
 
 st.set_page_config(page_title="Spaced Recall App", layout="centered")
 
-# 🔐 Login
+# 🔐 Login check
 if "username" not in st.session_state:
     user = run_login()
     if not user:
@@ -11,7 +11,21 @@ if "username" not in st.session_state:
 else:
     user = st.session_state["username"]
 
-# ✅ Welcome UI
+# ✅ Meta redirect if page triggered
+if st.session_state.get("navigation_triggered"):
+    st.session_state["navigation_triggered"] = False
+    page = st.session_state.pop("target_page", None)
+    if page:
+        st.markdown(f"<meta http-equiv='refresh' content='0;URL=./{page}'>", unsafe_allow_html=True)
+        st.stop()
+
+# === Navigation helper ===
+def go_to_page(page_name):
+    st.session_state["target_page"] = page_name
+    st.session_state["navigation_triggered"] = True
+    st.experimental_rerun()
+
+# === Main UI ===
 st.title("🧠 Spaced Recall Hub")
 name = st.session_state.get("name", user)
 st.success(f"✅ Welcome, {name}!")
@@ -22,17 +36,16 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     if st.button("📊 Dashboard"):
-        st.markdown("[Redirecting...](./Dashboard)")
+        go_to_page("Dashboard")
 
 with col2:
     if st.button("🛠️ Subject Editor"):
-        st.markdown("[Redirecting...](./Subject_Editor)")
+        go_to_page("Subject_Editor")
 
 with col3:
     if st.button("🎮 Profile"):
-        st.markdown("[Redirecting...](./Profile)")
+        go_to_page("Profile")
 
-# === Optional Logout ===
 st.markdown("---")
 if st.button("🔒 Log out"):
     st.session_state.clear()
