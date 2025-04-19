@@ -1,87 +1,52 @@
 import streamlit as st
-st.set_page_config(page_title="Dashboard", layout="centered")  # MUST be first!
-
-# ✅ Debug print to verify session state
-st.sidebar.write("Debug session keys:", list(st.session_state.keys()))
-st.sidebar.write("Current user:", st.session_state.get("user"))
-
-
 import pandas as pd
 import calendar
 from datetime import datetime, timedelta
 from gcal_sync import sync_reviews_to_calendar
 from firebase_db import load_user_subjects
 
-# ✅ Check login session
+st.set_page_config(page_title="Dashboard", layout="wide")
+
+# ✅ Check login
 if "username" not in st.session_state:
     st.error("❌ Please log in first.")
     st.stop()
 
-# ✅ Get logged-in user
 user = st.session_state["username"]
+subjects = load_user_subjects(user)
 
+st.title("📊 Study Dashboard")
+st.markdown(f"Welcome back, **{st.session_state.get('name', user)}**! Track your progress below.")
 
-# ✅ Debug: See what's stored
-st.sidebar.markdown("### 🐞 Debug Info")
-st.sidebar.write("Session user:", user)
+# === XP Table View ===
+if subjects:
+    subject_rows = []
+    for subj_name, subj_data in subjects.items():
+        style = subj_data.get("study_style", "unknown")
+        topics = subj_data.get("topics", {}) if style != "exam_mode" else {
+            t: td for sec in subj_data.get("sections", {}).values()
+            for t, td in sec.get("topics", {}).items()
+        }
+        xp_total = sum(t.get("xp", 0) for t in topics.values())
+        conf_avg = (
+            round(sum(t.get("confidence", 0) for t in topics.values()) / len(topics), 2)
+            if topics else 0
+        )
+        subject_rows.append({
+            "Subject": subj_name,
+            "Style": style,
+            "XP": xp_total,
+            "Avg Confidence": conf_avg,
+            "Topics": len(topics)
+        })
 
-# ✅ Safe call to load data
-try:
-    subjects = load_user_subjects(user)
-except Exception as e:
-    st.error(f"⚠️ Failed to load data for `{user}`. Error: {e}")
-    st.stop()
+    df = pd.DataFrame(subject_rows)
 
-st.title("📊 Dashboard")
-st.markdown(f"Welcome back, **{user}**!")
+    st.subheader("📘 Subject Overview")
+    st.dataframe(df, use_container_width=True)
 
-if st.button("🔄 Sync Reviews to Google Calendar"):
-    with st.spinner("Syncing to Google Calendar..."):
-        result = sync_reviews_to_calendar()
-    st.success(result)
-
-today = datetime.now().date()
-today_str = today.isoformat()
-yesterday_str = (today - timedelta(days=1)).isoformat()
-upcoming_range = [(today + timedelta(days=i)).isoformat() for i in range(1, 6)]
-
-due_today, missed_yesterday, upcoming_reviews = [], [], []
-
-def check_review_entry(parent, topic_data, topic_name):
-    due = topic_data.get("next_review")
-    if due == today_str:
-        due_today.append((parent, topic_name))
-    elif due == yesterday_str:
-        missed_yesterday.append((parent, topic_name))
-    elif due in upcoming_range:
-        upcoming_reviews.append((parent, topic_name, due))
-
-for subj_name, subj in subjects.items():
-    if subj.get("study_style") == "concept_mastery":
-        for topic_name, topic in subj.get("topics", {}).items():
-            check_review_entry(subj_name, topic, topic_name)
-    elif subj.get("study_style") == "exam_mode":
-        for section, sec_data in subj.get("sections", {}).items():
-            if sec_data.get("study_style") == "concept_mastery":
-                for topic_name, topic in sec_data.get("topics", {}).items():
-                    full_path = f"{subj_name} > {section}"
-                    check_review_entry(full_path, topic, topic_name)
-
-st.markdown("### 📅 Review Summary")
-
-if due_today:
-    st.markdown("#### 🔁 Due Today")
-    for parent, topic in due_today:
-        st.markdown(f"- **{topic}** from *{parent}*")
+    for _, row in df.iterrows():
+        st.markdown(f"**{row['Subject']}** — XP: {row['XP']} | Confidence: {row['Avg Confidence']}")
+        st.progress(min(row['Avg Confidence'] / 10, 1.0))
 else:
-    st.success("✅ No reviews due today!")
-
-if missed_yesterday:
-    st.markdown("#### ❌ Missed Yesterday")
-    for parent, topic in missed_yesterday:
-        st.markdown(f"- **{topic}** from *{parent}*")
-
-if upcoming_reviews:
-    st.markdown("#### 🔜 Upcoming Reviews")
-    for parent, topic, due in upcoming_reviews:
-        st.markdown(f"- **{topic}** from *{parent}* — Due: `{due}`")
+    st.warning("You have no subjects yet. Create one to begin tracking progress!")
