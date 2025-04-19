@@ -29,6 +29,12 @@ def go_to_page(page_name):
 st.title("🧠 Spaced Recall Hub")
 name = st.session_state.get("name", user)
 st.success(f"✅ Welcome, {name}!")
+# Meta redirect if navigation was requested
+if "target_page" in st.session_state:
+    page = st.session_state.pop("target_page")
+    st.markdown(f"<meta http-equiv='refresh' content='0;URL=./{page}'>", unsafe_allow_html=True)
+    st.stop()
+
 
 st.subheader("📚 Choose where to go next:")
 
@@ -36,15 +42,17 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     if st.button("📊 Dashboard"):
-        go_to_page("Dashboard")
+        st.session_state["target_page"] = "Dashboard"
 
 with col2:
     if st.button("🛠️ Subject Editor"):
-        go_to_page("Subject_Editor")
+        st.session_state["target_page"] = "Subject_Editor"
+
 
 with col3:
     if st.button("🎮 Profile"):
-        go_to_page("Profile")
+        st.session_state["target_page"] = "Profile"
+
 
 st.markdown("---")
 if st.button("🔒 Log out"):
