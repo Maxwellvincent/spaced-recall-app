@@ -1,7 +1,7 @@
 import streamlit as st
 from firebase_db import db
 import bcrypt
-from streamlit_extras.switch_page_button import switch_page
+#from streamlit_extras.switch_page_button import switch_page #
 
 
 def run_login():
