@@ -1,6 +1,8 @@
 import streamlit as st
 from firebase_db import db
 import streamlit_authenticator as stauth
+import bcrypt
+
 
 st.set_page_config(page_title="Register", layout="centered")
 st.title("🆕 Create a New Account")
@@ -29,11 +31,7 @@ with st.form("register_form"):
                 if user_doc.exists:
                     st.warning("🚫 Username already exists.")
                 else:
-                    # Make sure password is a string
-                    password = str(password)
-
-                    # Compatible way to hash
-                    hashed_pw = stauth.Hasher().hash([password])[0]
+                    hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
                     users_ref.document(username).set({
                         "name": name,
