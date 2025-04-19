@@ -29,8 +29,12 @@ with st.form("register_form"):
                 if user_doc.exists:
                     st.warning("🚫 Username already exists.")
                 else:
-                    hashed_pw_list = stauth.Hasher([password]).generate()
-                    hashed_pw = stauth.Hasher([password]).generate()[0]
+                    # Make sure password is a string
+                    password = str(password)
+
+                    # Compatible way to hash
+                    hashed_pw = stauth.Hasher().hash([password])[0]
+
                     users_ref.document(username).set({
                         "name": name,
                         "email": email,
