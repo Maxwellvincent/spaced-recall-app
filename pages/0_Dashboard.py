@@ -21,32 +21,60 @@ st.markdown(f"Welcome back, **{st.session_state.get('name', user)}**! Track your
 # === XP Table View ===
 if subjects:
     subject_rows = []
+    section_rows = []
+
     for subj_name, subj_data in subjects.items():
         style = subj_data.get("study_style", "unknown")
-        topics = subj_data.get("topics", {}) if style != "exam_mode" else {
-            t: td for sec in subj_data.get("sections", {}).values()
-            for t, td in sec.get("topics", {}).items()
-        }
-        xp_total = sum(t.get("xp", 0) for t in topics.values())
-        conf_avg = (
-            round(sum(t.get("confidence", 0) for t in topics.values()) / len(topics), 2)
-            if topics else 0
-        )
-        subject_rows.append({
-            "Subject": subj_name,
-            "Style": style,
-            "XP": xp_total,
-            "Avg Confidence": conf_avg,
-            "Topics": len(topics)
-        })
 
-    df = pd.DataFrame(subject_rows)
+        if style == "exam_mode":
+            for section_name, sec in subj_data.get("sections", {}).items():
+                xp = sec.get("xp", 0)
+                topics = sec.get("topics", {})
+                conf_avg = (
+                    round(sum(t.get("confidence", 0) for t in topics.values()) / len(topics), 2)
+                    if topics else 0
+                )
+                section_rows.append({
+                    "Subject": subj_name,
+                    "Section": section_name,
+                    "XP": xp,
+                    "Avg Confidence": conf_avg,
+                    "Topics": len(topics)
+                })
+        else:
+            topics = subj_data.get("topics", {})
+            xp_total = sum(t.get("xp", 0) for t in topics.values())
+            conf_avg = (
+                round(sum(t.get("confidence", 0) for t in topics.values()) / len(topics), 2)
+                if topics else 0
+            )
+            subject_rows.append({
+                "Subject": subj_name,
+                "Style": style,
+                "XP": xp_total,
+                "Avg Confidence": conf_avg,
+                "Topics": len(topics)
+            })
 
-    st.subheader("📘 Subject Overview")
-    st.dataframe(df, use_container_width=True)
+    # Display Subject Overview
+    if subject_rows:
+        st.subheader("📘 Subject Overview")
+        df = pd.DataFrame(subject_rows)
+        st.dataframe(df, use_container_width=True)
 
-    for _, row in df.iterrows():
-        st.markdown(f"**{row['Subject']}** — XP: {row['XP']} | Confidence: {row['Avg Confidence']}")
-        st.progress(min(row['Avg Confidence'] / 10, 1.0))
+        for _, row in df.iterrows():
+            st.markdown(f"**{row['Subject']}** — XP: {row['XP']} | Confidence: {row['Avg Confidence']}")
+            st.progress(min(row['Avg Confidence'] / 10, 1.0))
+
+    # Display Section Overview if available
+    if section_rows:
+        st.subheader("🧩 Section-Level Progress")
+        section_df = pd.DataFrame(section_rows)
+        st.dataframe(section_df, use_container_width=True)
+
+        for _, row in section_df.iterrows():
+            st.markdown(f"📖 **{row['Section']}** in *{row['Subject']}* — XP: {row['XP']} | Confidence: {row['Avg Confidence']}")
+            st.progress(min(row['Avg Confidence'] / 10, 1.0))
+
 else:
     st.warning("You have no subjects yet. Create one to begin tracking progress!")
