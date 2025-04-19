@@ -1,41 +1,57 @@
 import streamlit as st
-st.set_page_config(page_title="Dashboard", layout="centered")  # MUST be first!
+from firebase_db import load_user_subjects, save_user_subjects
 
-import pandas as pd
-import calendar
-from datetime import datetime, timedelta
-from gcal_sync import sync_reviews_to_calendar
-from firebase_db import load_user_subjects
+st.set_page_config(page_title="Create New Subject", layout="centered")
 
-# ✅ Check login session
 if "username" not in st.session_state:
     st.error("❌ Please log in first.")
     st.stop()
 
-# ✅ Get logged-in user
 user = st.session_state["username"]
 
+st.title("📘 Create a New Subject")
 
-# ✅ Safe call to load data
-try:
-    subjects = load_user_subjects(user)
-except Exception as e:
-    st.error(f"⚠️ Failed to load data for `{user}`. Error: {e}")
-    st.stop()
+# === Load existing subjects ===
+subjects = load_user_subjects(user)
 
-st.title("🆕 Create a New Subject")
+# === Subject Creation Form ===
+with st.form("create_subject_form"):
+    subject_name = st.text_input("Subject Name (e.g. Organic Chemistry)")
+    study_style = st.selectbox("Study Style", ["subject_mastery", "exam_mode", "reading", "book_study", "research"])
+    submit = st.form_submit_button("Create Subject")
 
-with st.form("subject_form", clear_on_submit=True):
-    name = st.text_input("Subject Name")
-    study_style = st.selectbox("Choose a Study Style", [
-        "concept_mastery", "exam_mode", "book_study", "reading", "research"
-    ])
-    submitted = st.form_submit_button("Add Subject")
-
-    if submitted:
-        if name in subjects:
-            st.warning("This subject already exists.")
+    if submit:
+        if not subject_name:
+            st.warning("⚠️ Please enter a subject name.")
+        elif subject_name in subjects:
+            st.warning("⚠️ That subject already exists.")
         else:
-            subjects[name] = {"study_style": study_style}
+            # Initialize structure based on selected study style
+            if study_style == "subject_mastery":
+                subjects[subject_name] = {
+                    "study_style": study_style,
+                    "topics": {}
+                }
+            elif study_style == "exam_mode":
+                subjects[subject_name] = {
+                    "study_style": study_style,
+                    "sections": {}
+                }
+            elif study_style == "reading":
+                subjects[subject_name] = {
+                    "study_style": study_style,
+                    "articles": []
+                }
+            elif study_style == "book_study":
+                subjects[subject_name] = {
+                    "study_style": study_style,
+                    "books": []
+                }
+            elif study_style == "research":
+                subjects[subject_name] = {
+                    "study_style": study_style,
+                    "logs": []
+                }
+
             save_user_subjects(user, subjects)
-            st.success(f"✅ Subject '{name}' added!")
+            st.success(f"✅ Created subject: {subject_name}")
