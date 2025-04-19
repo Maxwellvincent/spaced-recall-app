@@ -13,7 +13,9 @@ if "username" not in st.session_state:
     st.stop()
 
 # ✅ Get logged-in user
-user = st.session_state["username"]
+user = st.session_state.get("username")
+display_name = st.session_state.get("name", user)
+
 
 
 # ✅ Safe call to load data

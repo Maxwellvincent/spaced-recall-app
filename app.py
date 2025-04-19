@@ -26,7 +26,8 @@ Use the sidebar to begin:
 # === LOGGED IN VIEW ===
 if "username" in st.session_state:
     user = st.session_state["username"]
-    st.success(f"👋 Welcome back, **{user}**!")
+    display_name = st.session_state.get("name", user)
+    st.success(f"👋 Welcome back, **{display_name}**!")
 
     st.markdown("Use the sidebar to explore your dashboard, edit subjects, or begin reviewing.")
 

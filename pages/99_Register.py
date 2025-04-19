@@ -39,6 +39,15 @@ with st.form("register_form"):
                         "password": hashed_pw,
                         "roles": ["user"]
                     })
-                    st.success("✅ Account created! Please log in on the Home page.")
+
+                    # Auto-login the user
+                    st.session_state["username"] = username
+                    st.session_state["name"] = name
+                    st.session_state["roles"] = ["user"]
+
+                    st.success(f"✅ Welcome, {name}! You're now logged in.")
+                    st.rerun()
+                    
+                    
             except Exception as e:
                 st.error(f"❌ Error writing to Firestore: {e}")
