@@ -1,6 +1,8 @@
 import streamlit as st
 from firebase_db import db
 import bcrypt
+from streamlit_extras.switch_page_button import switch_page
+
 
 def run_login():
     with st.form("login_form"):
@@ -35,6 +37,8 @@ def run_login():
                 st.session_state["username"] = login_id
                 st.session_state["name"] = data.get("name", login_id)
                 st.session_state["roles"] = data.get("roles", ["user"])
+                
+                switch_page("Dashboard")  # 👈 Jump to Dashboard
                 return login_id
             else:
                 st.error("❌ Incorrect password.")

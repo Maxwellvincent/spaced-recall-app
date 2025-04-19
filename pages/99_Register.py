@@ -2,6 +2,10 @@ import streamlit as st
 from firebase_db import db
 import streamlit_authenticator as stauth
 import bcrypt
+from streamlit_extras.switch_page_button import switch_page
+
+if "username" in st.session_state:
+    switch_page("Dashboard")
 
 
 st.set_page_config(page_title="Register", layout="centered")
