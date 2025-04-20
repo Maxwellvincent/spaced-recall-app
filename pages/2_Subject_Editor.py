@@ -63,20 +63,25 @@ if style == "subject_mastery":
 if style == "exam_mode":
     st.subheader("📑 Existing Sections")
     for sec_name in list(subject_data.get("sections", {}).keys()):
-        col1, col2 = st.columns([6, 2])
+        section = subject_data["sections"][sec_name]
+        col1, col2, col3 = st.columns([4, 3, 1])
         with col1:
-            st.markdown(f"**{sec_name}** — {subject_data['sections'][sec_name].get('study_style')}")
+            st.markdown(f"**{sec_name}** — {section.get('study_style')} | *{section.get('activity_type', 'n/a')}*")
         with col2:
+            new_type = st.selectbox("Activity Type", ["standard", "notecard_creation", "notecard_review", "anki_review"], index=["standard", "notecard_creation", "notecard_review", "anki_review"].index(section.get("activity_type", "standard")), key=f"act_type_{sec_name}")
+            section["activity_type"] = new_type
+        with col3:
             if st.button("🗑️ Delete", key=f"delete_sec_{sec_name}"):
                 del subject_data["sections"][sec_name]
                 save_user_subjects(user, subjects)
                 st.rerun()
+    save_user_subjects(user, subjects)
 
     st.subheader("➕ Add Section to This Subject")
     with st.form("add_section_form", clear_on_submit=True):
         section_name = st.text_input("Section Name")
-        section_style = st.selectbox("Section Study Style", [
-            "subject_mastery", "reading", "book_study", "research"])
+        section_style = st.selectbox("Section Study Style", ["subject_mastery", "reading", "book_study", "research"])
+        activity_type = st.selectbox("Activity Type", ["standard", "notecard_creation", "notecard_review", "anki_review"])
         submit_section = st.form_submit_button("Add Section")
 
         if submit_section:
@@ -86,7 +91,8 @@ if style == "exam_mode":
             subject_data["sections"][section_name] = {
                 "study_style": section_style,
                 "topics": {} if section_style == "subject_mastery" else [],
-                "xp": 0
+                "xp": 0,
+                "activity_type": activity_type
             }
             save_user_subjects(user, subjects)
             st.success(f"✅ Section '{section_name}' added!")
