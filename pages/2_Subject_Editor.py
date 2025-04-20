@@ -1,7 +1,6 @@
 import streamlit as st
-from firebase_db import load_user_subjects, save_user_subjects, add_user_xp
+from firebase_db import load_user_subjects, save_user_subjects, add_user_xp, db
 import pandas as pd
-import calendar
 from datetime import datetime
 
 st.set_page_config(page_title="Subject Editor", layout="centered")
@@ -31,8 +30,8 @@ style = subject_data.get("study_style", "unknown")
 # === DELETE SUBJECT ===
 with st.expander("⚠️ Danger Zone: Delete Subject"):
     if st.button(f"❌ Delete Entire Subject: {selected_subject}"):
-        del subjects[selected_subject]  # remove from local dict
-        save_user_subjects(user, subjects)  # re-save entire dict to Firestore
+        del subjects[selected_subject]
+        db.collection("users").document(user).update({"subjects": subjects})
         st.success(f"'{selected_subject}' has been deleted.")
         st.rerun()
 
