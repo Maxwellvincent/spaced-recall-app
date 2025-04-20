@@ -28,12 +28,21 @@ selected_subject = st.selectbox("Select a subject:", list(subjects.keys()))
 subject_data = subjects[selected_subject]
 style = subject_data.get("study_style", "unknown")
 
+# === DELETE SUBJECT ===
+with st.expander("⚠️ Danger Zone: Delete Subject"):
+    if st.button(f"❌ Delete Entire Subject: {selected_subject}"):
+        subjects.pop(selected_subject, None)
+        save_user_subjects(user, subjects)
+        st.success(f"'{selected_subject}' has been deleted.")
+        st.experimental_rerun()
+
 # === Display current topics if subject_mastery ===
 if style == "subject_mastery":
     st.subheader("📌 Topics in This Subject")
     if subject_data.get("topics"):
-        for topic_name, topic_info in subject_data["topics"].items():
-            col1, col2, col3 = st.columns([4, 2, 2])
+        for topic_name in list(subject_data["topics"].keys()):
+            topic_info = subject_data["topics"][topic_name]
+            col1, col2, col3, col4 = st.columns([4, 2, 2, 2])
             with col1:
                 new_name = st.text_input(f"✏️ {topic_name}", value=topic_name, key=f"edit_{topic_name}")
             with col2:
@@ -43,7 +52,6 @@ if style == "subject_mastery":
                     del subject_data["topics"][topic_name]
                     save_user_subjects(user, subjects)
                     st.experimental_rerun()
-            # Save any name change or confidence change
             if new_name != topic_name:
                 subject_data["topics"][new_name] = subject_data["topics"].pop(topic_name)
                 topic_info = subject_data["topics"][new_name]
@@ -97,46 +105,3 @@ if style == "subject_mastery":
                 }
                 save_user_subjects(user, subjects)
                 st.success(f"✅ Topic '{topic_input}' added to {selected_subject}.")
-
-# === SHOW BASED ON STUDY STYLE ===
-if style == "reading":
-    st.subheader("📘 Add Reading or CARS Passage")
-
-    if "articles" not in subject_data:
-        subject_data["articles"] = []
-
-    with st.form("add_article", clear_on_submit=True):
-        title = st.text_input("Title (optional)")
-        passage = st.text_input("Passage Number")
-        topic = st.text_input("Topic")
-        source = st.text_input("Source")
-        score = st.slider("Score %", 0, 100, 80)
-        notes = st.text_area("Notes")
-        submitted = st.form_submit_button("Save")
-
-        if submitted:
-            new_entry = {
-                "title": title,
-                "passage_number": passage,
-                "topic": topic,
-                "source": source,
-                "score_percentage": score,
-                "notes": notes,
-                "date_read": datetime.today().date().isoformat()
-            }
-            subject_data["articles"].append(new_entry)
-            save_user_subjects(user, subjects)
-
-            xp_gain = 10 if score >= 90 else 8 if score >= 80 else 6 if score >= 70 else 4 if score >= 60 else 2 if score >= 50 else 1
-            total_xp = add_user_xp(user, xp_gain)
-            st.success(f"✅ Added! +{xp_gain} XP (Total: {total_xp})")
-
-# === UPDATE SECTION XP ON TOPIC CHANGE ===
-if style == "exam_mode":
-    st.subheader("📑 Section XP Overview")
-    for section_name, sec_data in subject_data.get("sections", {}).items():
-        if sec_data.get("study_style") == "subject_mastery":
-            topics = sec_data.get("topics", {})
-            section_xp = sum(t.get("xp", 0) for t in topics.values())
-            sec_data["xp"] = section_xp
-    save_user_subjects(user, subjects)
