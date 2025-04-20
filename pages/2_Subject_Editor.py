@@ -68,8 +68,10 @@ if style == "exam_mode":
         with col1:
             st.markdown(f"**{sec_name}** — {section.get('study_style')} | *{section.get('activity_type', 'n/a')}*")
         with col2:
-            new_type = st.selectbox("Activity Type", ["standard", "notecard_creation", "notecard_review", "anki_review"], index=["standard", "notecard_creation", "notecard_review", "anki_review"].index(section.get("activity_type", "standard")), key=f"act_type_{sec_name}")
-            section["activity_type"] = new_type
+            options = ["standard", "notecard_creation", "notecard_review", "anki_review"]
+            current_type = section.get("activity_type", "standard")
+            index = options.index(current_type) if current_type in options else 0
+            new_type = st.selectbox("Activity Type", options, index=index, key=f"act_type_{sec_name}")
         with col3:
             if st.button("🗑️ Delete", key=f"delete_sec_{sec_name}"):
                 del subject_data["sections"][sec_name]
