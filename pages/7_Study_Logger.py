@@ -1,8 +1,7 @@
 import streamlit as st
 from urllib.parse import parse_qs
 from firebase_db import load_user_subjects, save_user_subjects, add_user_xp, db
-from datetime import datetime, timedelta
-from datetime import date
+from datetime import datetime, timedelta, date
 from gcal_sync import add_event_to_calendar
 from fsrs import FSRS, Card
 
@@ -88,16 +87,16 @@ with st.form("log_study_session"):
         rating = rating_map[confidence]
 
         if "fsrs_card" not in section_data:
-            card = Card(due=now.date().isoformat(), stability=0.5, difficulty=0.3, elapsed_days=0, scheduled_days=0, reps=0, lapses=0, last_review=now.date().isoformat())
+            card = Card(due=date.today().isoformat(), stability=0.5, difficulty=0.3, elapsed_days=0, scheduled_days=0, reps=0, lapses=0, last_review=date.today().isoformat())
         else:
             raw = section_data["fsrs_card"]
             card = Card(**raw)
-            card.last_review = now.date().isoformat()
+            card.last_review = date.today().isoformat()
             card.reps += 1
 
         fsrs = FSRS()
         scheduling = fsrs.repeat(card, date.today(), rating)
-        card.due = (now + timedelta(days=scheduling.interval)).date().isoformat()
+        card.due = (date.today() + timedelta(days=scheduling["interval"])).isoformat()
         section_data["fsrs_card"] = card.model_dump()
 
         # Optional: Promote topic if confidence is 10
@@ -105,7 +104,7 @@ with st.form("log_study_session"):
             section_data["stage"] = "quiz"
             st.success("🎓 Topic promoted to 'quiz' stage!")
         else:
-            review_date = now + timedelta(days=scheduling.interval)
+            review_date = datetime.now() + timedelta(days=scheduling["interval"])
             title = f"Review: {selected_section or selected_subject}"
             desc = f"Spaced review for: {selected_subject} / {selected_section or 'Topic'}"
             add_event_to_calendar(title, desc, review_date)
