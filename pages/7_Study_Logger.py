@@ -2,6 +2,7 @@ import streamlit as st
 from urllib.parse import parse_qs
 from firebase_db import load_user_subjects, save_user_subjects, add_user_xp, db
 from datetime import datetime, timedelta
+from datetime import date
 from gcal_sync import add_event_to_calendar
 from fsrs import FSRS, Card
 
@@ -95,7 +96,7 @@ with st.form("log_study_session"):
             card.reps += 1
 
         fsrs = FSRS()
-        scheduling = fsrs.repeat(card, rating=rating, now=now.date())
+        scheduling = fsrs.repeat(card, date.today(), rating)
         card.due = (now + timedelta(days=scheduling.interval)).date().isoformat()
         section_data["fsrs_card"] = card.model_dump()
 
