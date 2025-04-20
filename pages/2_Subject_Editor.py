@@ -61,8 +61,18 @@ if style == "subject_mastery":
 
 # === ADD SECTION IF EXAM MODE ===
 if style == "exam_mode":
-    st.subheader("➕ Add Section to This Subject")
+    st.subheader("📑 Existing Sections")
+    for sec_name in list(subject_data.get("sections", {}).keys()):
+        col1, col2 = st.columns([6, 2])
+        with col1:
+            st.markdown(f"**{sec_name}** — {subject_data['sections'][sec_name].get('study_style')}")
+        with col2:
+            if st.button("🗑️ Delete", key=f"delete_sec_{sec_name}"):
+                del subject_data["sections"][sec_name]
+                save_user_subjects(user, subjects)
+                st.rerun()
 
+    st.subheader("➕ Add Section to This Subject")
     with st.form("add_section_form", clear_on_submit=True):
         section_name = st.text_input("Section Name")
         section_style = st.selectbox("Section Study Style", [
