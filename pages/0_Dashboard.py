@@ -92,38 +92,45 @@ if style == "exam_mode":
         if sec_style in ["concept_mastery", "subject_mastery"]:
             for topic, tdata in sec_data.get("topics", {}).items():
                 st.markdown(f"- **{topic}** | Stage: {tdata.get('stage')} | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
-            st.page_link("7_Study_Logger.py", label="📝 Log Session", params={"subject": selected_subject, "section": section})
+            st.markdown(f"[📝 Log Session](?subject={selected_subject})")
+
 
         elif sec_style == "reading":
             for a in sec_data.get("articles", []):
                 st.markdown(f"- **{a['title']}** from *{a['source']}*")
-            st.page_link("7_Study_Logger.py", label="📝 Log Reading", params={"subject": selected_subject, "section": section})
+            st.markdown(f"[📝 Log Session](?subject={selected_subject})")
+
 
         elif sec_style == "book_study":
             for b in sec_data.get("books", []):
                 st.markdown(f"- **{b['title']}** by {b['author']}*")
-            st.page_link("7_Study_Logger.py", label="📝 Log Book", params={"subject": selected_subject, "section": section})
+            st.markdown(f"[📝 Log Session](?subject={selected_subject})")
+
 
         elif sec_style == "research":
             for log in sec_data.get("logs", []):
                 st.markdown(f"- {log}")
-            st.page_link("7_Study_Logger.py", label="📝 Log Research", params={"subject": selected_subject, "section": section})
+            st.markdown(f"[📝 Log Session](?subject={selected_subject})")
+
 
 # === SINGLE STUDY STYLE DISPLAY ===
 elif style in ["concept_mastery", "subject_mastery"]:
     st.subheader("🧠 Topics")
     for topic, tdata in subject_data.get("topics", {}).items():
         st.markdown(f"- **{topic}** | Stage: {tdata.get('stage')} | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
-    st.page_link("7_Study_Logger.py", label="📝 Log Session", params={"subject": selected_subject})
+    st.markdown(f"[📝 Log Session](?subject={selected_subject})")
+
 
 elif style == "book_study":
     st.subheader("📚 Books")
     for book in subject_data.get("books", []):
         st.markdown(f"- **{book['title']}** by {book['author']}")
-    st.page_link("7_Study_Logger.py", label="📝 Log Book", params={"subject": selected_subject})
+    st.markdown(f"[📝 Log Session](?subject={selected_subject})")
+
 
 elif style == "reading":
     st.subheader("📰 Articles")
     for article in subject_data.get("articles", []):
         st.markdown(f"- **{article['title']}** from *{article['source']}*")
-    st.page_link("7_Study_Logger.py", label="📝 Log Reading", params={"subject": selected_subject})
+    st.markdown(f"[📝 Log Session](?subject={selected_subject})")
+
