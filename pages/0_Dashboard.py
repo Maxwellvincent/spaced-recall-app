@@ -4,10 +4,8 @@ import os
 import pandas as pd
 import calendar
 from datetime import datetime, timedelta
-# from gcal_sync import sync_reviews_to_calendar
-from firebase_db import load_user_subjects
-
-st.set_page_config(page_title="Study Dashboard", layout="centered")
+from gcal_sync import sync_reviews_to_calendar
+from firebase_db import load_user_subjects, add_user_xp
 
 if "username" not in st.session_state:
     st.error("❌ Please log in first.")
@@ -16,67 +14,116 @@ if "username" not in st.session_state:
 user = st.session_state["username"]
 subjects = load_user_subjects(user)
 
+st.set_page_config(page_title="Study Dashboard", layout="centered")
 st.title("📊 Study Dashboard")
 st.markdown(f"Welcome back, **{user}**!")
+st.markdown("Here’s where you’ll see your XP progress, reviews due, and study activity.")
 
-if not subjects:
-    st.info("No subjects found yet. Create one to get started!")
-    st.stop()
+# === SYNC BUTTON ===
+if st.button("🔄 Sync Reviews to Google Calendar"):
+    with st.spinner("Syncing to Google Calendar..."):
+        result = sync_reviews_to_calendar()
+    st.success(result)
 
-# === Filter bar ===
-with st.expander("🔍 Filter Subjects"):
-    filter_style = st.selectbox("Filter by Study Style", ["All"] + sorted({s.get("study_style") for s in subjects.values()}))
-    filter_query = st.text_input("Search Subject Name")
+# === DATE LOGIC ===
+today = datetime.now().date()
+today_str = today.isoformat()
+yesterday_str = (today - timedelta(days=1)).isoformat()
+upcoming_range = [(today + timedelta(days=i)).isoformat() for i in range(1, 6)]
 
-# === Filter logic ===
-def subject_matches(name, data):
-    if filter_style != "All" and data.get("study_style") != filter_style:
-        return False
-    if filter_query and filter_query.lower() not in name.lower():
-        return False
-    return True
+due_today = []
+missed_yesterday = []
+upcoming_reviews = []
 
-filtered_subjects = {name: data for name, data in subjects.items() if subject_matches(name, data)}
+def check_review_entry(parent, topic_data, topic_name):
+    due = topic_data.get("next_review")
+    if due == today_str:
+        due_today.append((parent, topic_name))
+    elif due == yesterday_str:
+        missed_yesterday.append((parent, topic_name))
+    elif due in upcoming_range:
+        upcoming_reviews.append((parent, topic_name, due))
 
-if not filtered_subjects:
-    st.warning("No subjects match your filters.")
-    st.stop()
+for subj_name, subj in subjects.items():
+    if subj.get("study_style") == "concept_mastery":
+        for topic_name, topic in subj.get("topics", {}).items():
+            check_review_entry(subj_name, topic, topic_name)
+    elif subj.get("study_style") == "exam_mode":
+        for section, sec_data in subj.get("sections", {}).items():
+            if sec_data.get("study_style") == "concept_mastery":
+                for topic_name, topic in sec_data.get("topics", {}).items():
+                    full_path = f"{subj_name} > {section}"
+                    check_review_entry(full_path, topic, topic_name)
 
-# === Display all subjects with progress ===
-for subject_name, subject_data in filtered_subjects.items():
-    st.markdown(f"## 📘 {subject_name} — *{subject_data.get('study_style')}*")
+# === DISPLAY REVIEWS ===
+st.markdown("### 📅 Review Summary")
 
-    if subject_data.get("study_style") == "subject_mastery":
-        topics = subject_data.get("topics", {})
-        total_xp = sum(t.get("xp", 0) for t in topics.values())
-        max_xp = len(topics) * 100 if topics else 1
-        progress = int((total_xp / max_xp) * 100)
-        st.progress(progress, text=f"Progress: {progress}%")
+if due_today:
+    st.markdown("#### 🔁 Due Today")
+    for parent, topic in due_today:
+        st.markdown(f"- **{topic}** from *{parent}*")
+else:
+    st.success("✅ No reviews due today!")
 
-        with st.expander("Topics"):
-            for topic_name, tdata in topics.items():
-                st.markdown(f"- **{topic_name}** | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
+if missed_yesterday:
+    st.markdown("#### ❌ Missed Yesterday")
+    for parent, topic in missed_yesterday:
+        st.markdown(f"- **{topic}** from *{parent}*")
 
-    elif subject_data.get("study_style") == "exam_mode":
-        st.markdown("**Sections:**")
-        for section_name, section_data in subject_data.get("sections", {}).items():
-            sec_xp = section_data.get("xp", 0)
-            topics = section_data.get("topics", {})
-            max_xp = len(topics) * 100 if topics else 1
-            progress = int((sec_xp / max_xp) * 100)
-            with st.expander(f"📂 {section_name} — {section_data.get('study_style')}"):
-                st.progress(progress, text=f"Progress: {progress}%")
-                for topic_name, tdata in topics.items():
-                    st.markdown(f"- **{topic_name}** | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
+if upcoming_reviews:
+    st.markdown("#### 🔜 Upcoming Reviews")
+    for parent, topic, due in upcoming_reviews:
+        st.markdown(f"- **{topic}** from *{parent}* — Due: `{due}`")
 
-    elif subject_data.get("study_style") == "reading":
-        articles = subject_data.get("articles", [])
-        st.markdown(f"Total Articles: {len(articles)}")
+# === SUBJECT SELECTOR ===
+st.markdown("---")
+selected_subject = st.selectbox("Choose a subject to view:", list(subjects.keys()))
+subject_data = subjects[selected_subject]
+style = subject_data.get("study_style", "unknown")
+st.header(f"🧠 {selected_subject} — `{style}`")
 
-    elif subject_data.get("study_style") == "book_study":
-        books = subject_data.get("books", [])
-        st.markdown(f"Books Tracked: {len(books)}")
+# === EXAM MODE SECTION VIEW ===
+if style == "exam_mode":
+    st.subheader("📑 Sections")
+    for section, sec_data in subject_data.get("sections", {}).items():
+        sec_style = sec_data.get("study_style", "unknown")
+        st.markdown(f"### 🔍 {section} — `{sec_style}`")
 
-    elif subject_data.get("study_style") == "research":
-        logs = subject_data.get("logs", [])
-        st.markdown(f"Research Logs: {len(logs)}")
+        if sec_style == "concept_mastery":
+            for topic, tdata in sec_data.get("topics", {}).items():
+                st.markdown(f"- **{topic}** | Stage: {tdata.get('stage')} | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
+            st.page_link("7_Study_Logger.py", label="📝 Log Session", params={"subject": selected_subject, "section": section})
+
+        elif sec_style == "reading":
+            for a in sec_data.get("articles", []):
+                st.markdown(f"- **{a['title']}** from *{a['source']}*")
+            st.page_link("7_Study_Logger.py", label="📝 Log Reading", params={"subject": selected_subject, "section": section})
+
+        elif sec_style == "book_study":
+            for b in sec_data.get("books", []):
+                st.markdown(f"- **{b['title']}** by {b['author']}*")
+            st.page_link("7_Study_Logger.py", label="📝 Log Book", params={"subject": selected_subject, "section": section})
+
+        elif sec_style == "research":
+            for log in sec_data.get("logs", []):
+                st.markdown(f"- {log}")
+            st.page_link("7_Study_Logger.py", label="📝 Log Research", params={"subject": selected_subject, "section": section})
+
+# === SINGLE STUDY STYLE DISPLAY ===
+elif style == "concept_mastery":
+    st.subheader("🧠 Topics")
+    for topic, tdata in subject_data.get("topics", {}).items():
+        st.markdown(f"- **{topic}** | Stage: {tdata.get('stage')} | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
+    st.page_link("7_Study_Logger.py", label="📝 Log Session", params={"subject": selected_subject})
+
+elif style == "book_study":
+    st.subheader("📚 Books")
+    for book in subject_data.get("books", []):
+        st.markdown(f"- **{book['title']}** by {book['author']}")
+    st.page_link("7_Study_Logger.py", label="📝 Log Book", params={"subject": selected_subject})
+
+elif style == "reading":
+    st.subheader("📰 Articles")
+    for article in subject_data.get("articles", []):
+        st.markdown(f"- **{article['title']}** from *{article['source']}*")
+    st.page_link("7_Study_Logger.py", label="📝 Log Reading", params={"subject": selected_subject})
