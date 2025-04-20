@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import calendar
 from datetime import datetime, timedelta
-from gcal_sync import sync_reviews_to_calendar
+#from gcal_sync import sync_reviews_to_calendar
 from firebase_db import load_user_subjects, add_user_xp
 
 if "username" not in st.session_state:
