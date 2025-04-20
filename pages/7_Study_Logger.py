@@ -3,7 +3,7 @@ from urllib.parse import parse_qs
 from firebase_db import load_user_subjects, save_user_subjects, add_user_xp, db
 from datetime import datetime, timedelta, date
 from gcal_sync import add_event_to_calendar
-from fsrs import FSRS, Card
+from fsrs.fsrs import FSRS, Card
 
 st.set_page_config(page_title="📚 Study Session Logger", layout="centered")
 
