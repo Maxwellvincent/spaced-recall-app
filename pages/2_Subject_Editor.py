@@ -35,7 +35,7 @@ if style == "exam_mode":
     with st.form("add_section_form", clear_on_submit=True):
         section_name = st.text_input("Section Name")
         section_style = st.selectbox("Section Study Style", [
-            "concept_mastery", "reading", "book_study", "research"])
+            "subject_mastery", "reading", "book_study", "research"])
         submit_section = st.form_submit_button("Add Section")
 
         if submit_section:
@@ -44,11 +44,35 @@ if style == "exam_mode":
 
             subject_data["sections"][section_name] = {
                 "study_style": section_style,
-                "topics": {} if section_style == "concept_mastery" else [],
+                "topics": {} if section_style == "subject_mastery" else [],
                 "xp": 0
             }
             save_user_subjects(user, subjects)
             st.success(f"✅ Section '{section_name}' added!")
+
+# === ADD TOPICS IF SUBJECT MASTERY ===
+if style == "subject_mastery":
+    st.subheader("➕ Add Topics to Subject")
+    with st.form("add_topic_form", clear_on_submit=True):
+        topic_input = st.text_input("Enter topic name (e.g. Aldol Condensation)")
+        add_topic = st.form_submit_button("Add Topic")
+
+        if add_topic:
+            if not topic_input:
+                st.warning("⚠️ Please enter a topic name.")
+            elif topic_input in subject_data.get("topics", {}):
+                st.warning("⚠️ Topic already exists.")
+            else:
+                if "topics" not in subject_data:
+                    subject_data["topics"] = {}
+
+                subject_data["topics"][topic_input] = {
+                    "stage": "book_review",
+                    "xp": 0,
+                    "confidence": 0
+                }
+                save_user_subjects(user, subjects)
+                st.success(f"✅ Topic '{topic_input}' added to {selected_subject}.")
 
 # === SHOW BASED ON STUDY STYLE ===
 if style == "reading":
@@ -87,7 +111,7 @@ if style == "reading":
 if style == "exam_mode":
     st.subheader("📑 Section XP Overview")
     for section_name, sec_data in subject_data.get("sections", {}).items():
-        if sec_data.get("study_style") == "concept_mastery":
+        if sec_data.get("study_style") == "subject_mastery":
             topics = sec_data.get("topics", {})
             section_xp = sum(t.get("xp", 0) for t in topics.values())
             sec_data["xp"] = section_xp
