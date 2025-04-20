@@ -3,7 +3,8 @@ from urllib.parse import parse_qs
 from firebase_db import load_user_subjects, save_user_subjects, add_user_xp, db
 from datetime import datetime, timedelta, date
 from gcal_sync import add_event_to_calendar
-from fsrs.fsrs import FSRS, Card
+from fsrs_model.fsrs import FSRS
+from fsrs_model.card import Card
 
 st.set_page_config(page_title="📚 Study Session Logger", layout="centered")
 
@@ -95,7 +96,7 @@ with st.form("log_study_session"):
             card.reps += 1
 
         fsrs = FSRS()
-        scheduling = fsrs.repeat(card, date.today(), rating)
+        scheduling = fsrs.repeat(card, rating=rating, now=date.today())
         card.due = (date.today() + timedelta(days=scheduling["interval"])).isoformat()
         section_data["fsrs_card"] = card.model_dump()
 
