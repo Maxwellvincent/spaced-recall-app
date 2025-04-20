@@ -34,7 +34,7 @@ with st.expander("⚠️ Danger Zone: Delete Subject"):
         subjects.pop(selected_subject, None)
         save_user_subjects(user, subjects)
         st.success(f"'{selected_subject}' has been deleted.")
-        st.experimental_rerun()
+        st.rerun()
 
 # === Display current topics if subject_mastery ===
 if style == "subject_mastery":
@@ -51,7 +51,7 @@ if style == "subject_mastery":
                 if st.button("❌ Delete", key=f"del_{topic_name}"):
                     del subject_data["topics"][topic_name]
                     save_user_subjects(user, subjects)
-                    st.experimental_rerun()
+                    st.rerun()
             if new_name != topic_name:
                 subject_data["topics"][new_name] = subject_data["topics"].pop(topic_name)
                 topic_info = subject_data["topics"][new_name]
