@@ -99,16 +99,19 @@ with st.form("log_study_session"):
         card.due = (now + timedelta(days=scheduling.interval)).date().isoformat()
         section_data["fsrs_card"] = card.model_dump()
 
-        save_user_subjects(user, subjects)
-        st.success(f"✅ Session logged. +{xp_gain} XP awarded!")
-
-        if confidence < 10:
+        # Optional: Promote topic if confidence is 10
+        if confidence == 10:
+            section_data["stage"] = "quiz"
+            st.success("🎓 Topic promoted to 'quiz' stage!")
+        else:
             review_date = now + timedelta(days=scheduling.interval)
             title = f"Review: {selected_section or selected_subject}"
             desc = f"Spaced review for: {selected_subject} / {selected_section or 'Topic'}"
             add_event_to_calendar(title, desc, review_date)
             st.success(f"📆 Google Calendar event scheduled for {review_date.strftime('%Y-%m-%d')}!")
 
+        save_user_subjects(user, subjects)
+        st.success(f"✅ Session logged. +{xp_gain} XP awarded!")
         st.balloons()
         st.rerun()
 
