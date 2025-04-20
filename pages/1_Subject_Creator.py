@@ -19,7 +19,7 @@ with st.form("create_subject_form"):
     subject_name = st.text_input("Subject Name (e.g. Organic Chemistry)")
     study_style = st.selectbox("Study Style", ["subject_mastery", "exam_mode", "reading", "book_study", "research"])
 
-    subtopics_input = st.text_area("Optional: Add initial subtopics (comma-separated)", placeholder="e.g. Aldol Condensation, SN1, E2")
+    subtopics_input = st.text_area("Optional: Add initial subtopics or sections (comma-separated)", placeholder="e.g. Anki, CARS, Biology")
 
     submit = st.form_submit_button("Create Subject")
 
@@ -29,26 +29,29 @@ with st.form("create_subject_form"):
         elif subject_name in subjects:
             st.warning("⚠️ That subject already exists.")
         else:
-            topic_dict = {}
-            subtopics = [s.strip() for s in subtopics_input.split(",") if s.strip()]
-            for sub in subtopics:
-                topic_dict[sub] = {
-                    "stage": "book_review",
-                    "xp": 0,
-                    "confidence": 0
-                }
+            subitems = [s.strip() for s in subtopics_input.split(",") if s.strip()]
 
-            # Initialize structure based on selected study style
             if study_style == "subject_mastery":
+                topic_dict = {name: {"stage": "book_review", "xp": 0, "confidence": 0} for name in subitems}
                 subjects[subject_name] = {
                     "study_style": study_style,
                     "topics": topic_dict
                 }
+
             elif study_style == "exam_mode":
+                section_dict = {}
+                for name in subitems:
+                    section_dict[name] = {
+                        "study_style": "subject_mastery",  # default nested style
+                        "topics": {},
+                        "xp": 0,
+                        "activity_type": "anki" if name.lower() == "anki" else "standard"
+                    }
                 subjects[subject_name] = {
                     "study_style": study_style,
-                    "sections": {}
+                    "sections": section_dict
                 }
+
             elif study_style == "reading":
                 subjects[subject_name] = {
                     "study_style": study_style,

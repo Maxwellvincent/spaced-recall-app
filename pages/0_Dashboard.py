@@ -1,13 +1,14 @@
 import streamlit as st
+import json
+import os
 import pandas as pd
 import calendar
 from datetime import datetime, timedelta
 from gcal_sync import sync_reviews_to_calendar
 from firebase_db import load_user_subjects
 
-st.set_page_config(page_title="Dashboard", layout="wide")
+st.set_page_config(page_title="Study Dashboard", layout="centered")
 
-# ✅ Check login
 if "username" not in st.session_state:
     st.error("❌ Please log in first.")
     st.stop()
@@ -16,65 +17,66 @@ user = st.session_state["username"]
 subjects = load_user_subjects(user)
 
 st.title("📊 Study Dashboard")
-st.markdown(f"Welcome back, **{st.session_state.get('name', user)}**! Track your progress below.")
+st.markdown(f"Welcome back, **{user}**!")
 
-# === XP Table View ===
-if subjects:
-    subject_rows = []
-    section_rows = []
+if not subjects:
+    st.info("No subjects found yet. Create one to get started!")
+    st.stop()
 
-    for subj_name, subj_data in subjects.items():
-        style = subj_data.get("study_style", "unknown")
+# === Filter bar ===
+with st.expander("🔍 Filter Subjects"):
+    filter_style = st.selectbox("Filter by Study Style", ["All"] + sorted({s.get("study_style") for s in subjects.values()}))
+    filter_query = st.text_input("Search Subject Name")
 
-        if style == "exam_mode":
-            for section_name, sec in subj_data.get("sections", {}).items():
-                xp = sec.get("xp", 0)
-                topics = sec.get("topics", {})
-                conf_avg = (
-                    round(sum(t.get("confidence", 0) for t in topics.values()) / len(topics), 2)
-                    if topics else 0
-                )
-                section_rows.append({
-                    "Subject": subj_name,
-                    "Section": section_name,
-                    "XP": xp,
-                    "Avg Confidence": conf_avg,
-                    "Topics": len(topics)
-                })
-        else:
-            topics = subj_data.get("topics", {})
-            xp_total = sum(t.get("xp", 0) for t in topics.values())
-            conf_avg = (
-                round(sum(t.get("confidence", 0) for t in topics.values()) / len(topics), 2)
-                if topics else 0
-            )
-            subject_rows.append({
-                "Subject": subj_name,
-                "Style": style,
-                "XP": xp_total,
-                "Avg Confidence": conf_avg,
-                "Topics": len(topics)
-            })
+# === Filter logic ===
+def subject_matches(name, data):
+    if filter_style != "All" and data.get("study_style") != filter_style:
+        return False
+    if filter_query and filter_query.lower() not in name.lower():
+        return False
+    return True
 
-    # Display Subject Overview
-    if subject_rows:
-        st.subheader("📘 Subject Overview")
-        df = pd.DataFrame(subject_rows)
-        st.dataframe(df, use_container_width=True)
+filtered_subjects = {name: data for name, data in subjects.items() if subject_matches(name, data)}
 
-        for _, row in df.iterrows():
-            st.markdown(f"**{row['Subject']}** — XP: {row['XP']} | Confidence: {row['Avg Confidence']}")
-            st.progress(min(row['Avg Confidence'] / 10, 1.0))
+if not filtered_subjects:
+    st.warning("No subjects match your filters.")
+    st.stop()
 
-    # Display Section Overview if available
-    if section_rows:
-        st.subheader("🧩 Section-Level Progress")
-        section_df = pd.DataFrame(section_rows)
-        st.dataframe(section_df, use_container_width=True)
+# === Display all subjects with progress ===
+for subject_name, subject_data in filtered_subjects.items():
+    st.markdown(f"## 📘 {subject_name} — *{subject_data.get('study_style')}*")
 
-        for _, row in section_df.iterrows():
-            st.markdown(f"📖 **{row['Section']}** in *{row['Subject']}* — XP: {row['XP']} | Confidence: {row['Avg Confidence']}")
-            st.progress(min(row['Avg Confidence'] / 10, 1.0))
+    if subject_data.get("study_style") == "subject_mastery":
+        topics = subject_data.get("topics", {})
+        total_xp = sum(t.get("xp", 0) for t in topics.values())
+        max_xp = len(topics) * 100 if topics else 1
+        progress = int((total_xp / max_xp) * 100)
+        st.progress(progress, text=f"Progress: {progress}%")
 
-else:
-    st.warning("You have no subjects yet. Create one to begin tracking progress!")
+        with st.expander("Topics"):
+            for topic_name, tdata in topics.items():
+                st.markdown(f"- **{topic_name}** | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
+
+    elif subject_data.get("study_style") == "exam_mode":
+        st.markdown("**Sections:**")
+        for section_name, section_data in subject_data.get("sections", {}).items():
+            sec_xp = section_data.get("xp", 0)
+            topics = section_data.get("topics", {})
+            max_xp = len(topics) * 100 if topics else 1
+            progress = int((sec_xp / max_xp) * 100)
+            with st.expander(f"📂 {section_name} — {section_data.get('study_style')}"):
+                st.progress(progress, text=f"Progress: {progress}%")
+                for topic_name, tdata in topics.items():
+                    st.markdown(f"- **{topic_name}** | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
+
+    elif subject_data.get("study_style") == "reading":
+        articles = subject_data.get("articles", [])
+        st.markdown(f"Total Articles: {len(articles)}")
+
+    elif subject_data.get("study_style") == "book_study":
+        books = subject_data.get("books", [])
+        st.markdown(f"Books Tracked: {len(books)}")
+
+    elif subject_data.get("study_style") == "research":
+        logs = subject_data.get("logs", [])
+        st.markdown(f"Research Logs: {len(logs)}")
