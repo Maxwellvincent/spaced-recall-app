@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import calendar
 from datetime import datetime, timedelta
-#from gcal_sync import sync_reviews_to_calendar
+from gcal_sync import sync_reviews_to_calendar
 from firebase_db import load_user_subjects, add_user_xp
 
 if "username" not in st.session_state:
@@ -50,7 +50,7 @@ for subj_name, subj in subjects.items():
             check_review_entry(subj_name, topic, topic_name)
     elif subj.get("study_style") == "exam_mode":
         for section, sec_data in subj.get("sections", {}).items():
-            if sec_data.get("study_style") == "concept_mastery":
+            if sec_data.get("study_style") in ["concept_mastery", "subject_mastery"]:
                 for topic_name, topic in sec_data.get("topics", {}).items():
                     full_path = f"{subj_name} > {section}"
                     check_review_entry(full_path, topic, topic_name)
@@ -89,7 +89,7 @@ if style == "exam_mode":
         sec_style = sec_data.get("study_style", "unknown")
         st.markdown(f"### 🔍 {section} — `{sec_style}`")
 
-        if sec_style == "concept_mastery":
+        if sec_style in ["concept_mastery", "subject_mastery"]:
             for topic, tdata in sec_data.get("topics", {}).items():
                 st.markdown(f"- **{topic}** | Stage: {tdata.get('stage')} | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
             st.page_link("7_Study_Logger.py", label="📝 Log Session", params={"subject": selected_subject, "section": section})
@@ -110,7 +110,7 @@ if style == "exam_mode":
             st.page_link("7_Study_Logger.py", label="📝 Log Research", params={"subject": selected_subject, "section": section})
 
 # === SINGLE STUDY STYLE DISPLAY ===
-elif style == "concept_mastery":
+elif style in ["concept_mastery", "subject_mastery"]:
     st.subheader("🧠 Topics")
     for topic, tdata in subject_data.get("topics", {}).items():
         st.markdown(f"- **{topic}** | Stage: {tdata.get('stage')} | XP: {tdata.get('xp')} | Confidence: {tdata.get('confidence')}")
