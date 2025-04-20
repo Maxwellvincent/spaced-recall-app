@@ -28,6 +28,30 @@ selected_subject = st.selectbox("Select a subject:", list(subjects.keys()))
 subject_data = subjects[selected_subject]
 style = subject_data.get("study_style", "unknown")
 
+# === Display current topics if subject_mastery ===
+if style == "subject_mastery":
+    st.subheader("📌 Topics in This Subject")
+    if subject_data.get("topics"):
+        for topic_name, topic_info in subject_data["topics"].items():
+            col1, col2, col3 = st.columns([4, 2, 2])
+            with col1:
+                new_name = st.text_input(f"✏️ {topic_name}", value=topic_name, key=f"edit_{topic_name}")
+            with col2:
+                new_conf = st.slider("Confidence", 0, 10, topic_info.get("confidence", 0), key=f"conf_{topic_name}")
+            with col3:
+                if st.button("❌ Delete", key=f"del_{topic_name}"):
+                    del subject_data["topics"][topic_name]
+                    save_user_subjects(user, subjects)
+                    st.experimental_rerun()
+            # Save any name change or confidence change
+            if new_name != topic_name:
+                subject_data["topics"][new_name] = subject_data["topics"].pop(topic_name)
+                topic_info = subject_data["topics"][new_name]
+            topic_info["confidence"] = new_conf
+        save_user_subjects(user, subjects)
+    else:
+        st.info("No topics yet. Add one below.")
+
 # === ADD SECTION IF EXAM MODE ===
 if style == "exam_mode":
     st.subheader("➕ Add Section to This Subject")
