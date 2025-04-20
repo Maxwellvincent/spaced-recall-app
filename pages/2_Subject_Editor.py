@@ -31,8 +31,8 @@ style = subject_data.get("study_style", "unknown")
 # === DELETE SUBJECT ===
 with st.expander("⚠️ Danger Zone: Delete Subject"):
     if st.button(f"❌ Delete Entire Subject: {selected_subject}"):
-        subjects.pop(selected_subject, None)
-        save_user_subjects(user, subjects)
+        del subjects[selected_subject]  # remove from local dict
+        save_user_subjects(user, subjects)  # re-save entire dict to Firestore
         st.success(f"'{selected_subject}' has been deleted.")
         st.rerun()
 
